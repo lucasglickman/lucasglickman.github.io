@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consolidated Chart</title>
+  <style>
+    #checkboxes {
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      margin: 0px;
+    }
+
+    .chart-title {
+      font-size: 24px;
+    }
+
+    #chartcontainer {
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+      scale: 80%;
+      height: auto;
+      background-color: #f9f9f9;
+    }
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    .img {
+      max-width: 80%;
+      border-radius: 5px;
+      transform: scale(1);
+      justify-content: center;
+    }
+
+    #blankspace {
+      background-color: #f9f9f9;
+      height: 0px;
+    }
+
+    #chartcontainer img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="chartcontainer">
+    <div id="blankspace"></div>
+    <div id="checkboxes"></div>
+    <canvas id="myChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const datasets = [
+  { img: 'WMMarkerC.png', uncheckedImg: 'WMMarkerUC.png', data: [], checked: true, color: '#a8dadc' },
+  { img: 'S&P500MarkerC.png', uncheckedImg: 'S&P500MarkerUC.png', data: [], checked: true, color: '#C70039' },
+  { img: 'GMarkerC.png', uncheckedImg: 'GMarkerUC.png', data: [], checked: true, color: '#F4EA56  ' },
+];
+
+let chart;
+
+function drawChart() {
+  const canvas = document.getElementById('myChart');
+  const ctx = canvas.getContext('2d');
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Jan 20', 'Feb 20', 'Mar 20', 'Apr 20', 'May 20', 'Jun 20', 'Jul 20', 'Aug 20', 'Sep 20', 'Oct 20', 'Nov 20', 'Dec 20', 'Jan 21', 'Feb 21', 'Mar 21', 'Apr 21', 'May 21', 'Jun 21', 'Jul 21', 'Aug 21', 'Sep 21', 'Oct 21', 'Nov 21', 'Dec 21', 'Jan 22', 'Feb 22', 'Mar 22'],
+      datasets: datasets.filter(d => d.checked).map(d => ({
+        label: d.label,
+        data: d.data,
+        fill: false,
+        borderColor: d.color,
+      })),
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: false,
+          text: 'Interactive Comparison Chart',
+          font: {
+            size: 50
+          }
+          
+        },
+        legend: {
+          display: false
+        },
+        legendCallback: function(chart) {
+          var text = [];
+          text.push('<ul class="' + chart.id + '-legend">');
+          for (var i = 0; i < chart.data.datasets.length; i++) {
+            text.push('<li>');
+            text.push('<span style="background-color:' + chart.data.datasets[i].borderColor + '"></span>');
+            text.push(chart.data.datasets[i].label);
+            text.push('</li>');
+          }
+          text.push('</ul>');
+          return text.join('');
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false,
+            borderWidth: 0
+          },
+          display: false,
+          
+          ticks: {
+            font: {
+              size: 14
+            }
+          }
+        },
+        y: {
+          display: true,
+          
+          ticks: {
+            font: {
+              size: 14
+            }
+          }
+        }
+      }
+    }    
+  });
+}
+/*
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}*/
+
+function loadData() {
+  fetch('data.csv')
+    .then(response => response.text())
+    .then(text => {
+      const rows = text.split('\n').slice(1);
+      rows.forEach(row => {
+        const values = row.split(',');
+        datasets.forEach((dataset, index) => {
+          dataset.data.push(parseFloat(values[index + 1]));
+        });
+      });
+      drawChart();
+    });
+}
+/*
+function init() {
+  const checkboxContainer = document.getElementById('checkboxes');
+  datasets.forEach((dataset, index) => {
+    const checkbox = document.createElement('input');
+    let i = 1;
+    checkbox.type = 'checkbox';
+    checkbox.checked = true;
+    checkbox.id = `dataset-${index}`;
+    checkbox.addEventListener('change', () => {
+      dataset.checked = checkbox.checked;
+      drawChart();
+      if (i%2 == 1){
+        img.src ='logo.png';
+      }
+      else{
+        img.src = 'line1.png'
+      }
+      i++;
+    });
+
+    const label = document.createElement('label');
+    //label.textContent = dataset.label;
+    const img = document.createElement('img');
+    img.src = dataset.img;
+    img.style.marginRight = '125px';
+
+    label.appendChild(img);
+
+    label.setAttribute('for', `dataset-${index}`);
+
+    checkboxContainer.appendChild(checkbox);
+    checkboxContainer.appendChild(label);
+    
+  });
+
+  loadData();
+}
+
+
+
+init();
+*/
+
+function init() {
+  const checkboxContainer = document.getElementById('checkboxes');
+  datasets.forEach((dataset, index) => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = true;
+    checkbox.id = `dataset-${index}`;
+    checkbox.addEventListener('change', () => {
+      dataset.checked = checkbox.checked;
+      drawChart();
+
+      const label = document.querySelector(`label[for="${checkbox.id}"]`);
+      const img = label.querySelector('img');
+
+      if (checkbox.checked) {
+        // If the checkbox is checked, set the image source to the dataset's image
+        img.src = dataset.img;
+      } else {
+        // If the checkbox is unchecked, set the image source to a different image (e.g. 'unchecked.png')
+        img.src = dataset.uncheckedImg;
+      }
+    });
+
+    const label = document.createElement('label');
+    const img = document.createElement('img');
+    img.src = dataset.img;
+    img.style.marginRight = '50px';
+
+    label.appendChild(img);
+    label.setAttribute('for', `dataset-${index}`);
+
+    checkboxContainer.appendChild(checkbox);
+    checkboxContainer.appendChild(label);
+  });
+
+  loadData();
+}
+
+init();
+  </script>
+</body>
+</html>
